@@ -3,10 +3,6 @@ package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 import org.hibernate.Session;
-import org.hibernate.query.Query;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
@@ -47,13 +43,14 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        try (Session session = Util.getSessionFactory().getCurrentSession()) {
+        try (Session session = Util.getSessionFactory().openSession()) {
             session.beginTransaction();
-            Query query = session.createSQLQuery("INSERT INTO user  VALUES ( id, :name1, :lastname1 ,:age1)");
-            query.setParameter("name1", name);
-            query.setParameter("lastname1", lastName);
-            query.setParameter("age1", age);
-            query.executeUpdate();
+            User user = User.builder()
+                    .name(name)
+                    .lastName(lastName)
+                    .age(age)
+                    .build();
+            session.save(user);
             session.getTransaction().commit();
         } catch (Exception e) {
             e.printStackTrace();
@@ -65,9 +62,8 @@ public class UserDaoHibernateImpl implements UserDao {
     public void removeUserById(long id) {
         try (Session session = Util.getSessionFactory().getCurrentSession()) {
             session.beginTransaction();
-            Query query = session.createSQLQuery("DELETE FROM user WHERE :id ");
-            query.setParameter("id", id);
-            query.executeUpdate();
+            User user =  session.get(User.class, id);
+            session.remove(user);
             session.getTransaction().commit();
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,24 +74,13 @@ public class UserDaoHibernateImpl implements UserDao {
     public List<User> getAllUsers() {
         try (Session session = Util.getSessionFactory().getCurrentSession()) {
             session.beginTransaction();
-            Query query = session.createSQLQuery("SELECT * FROM user");
-
-            List<Object[]> res = query.getResultList();
-            List<User> list= new ArrayList<>();
-
-            Iterator it = res.iterator();
-            while(it.hasNext()){
-                Object[] line = (Object[]) it.next();
-                User eq = new User();
-                eq.setId( ((BigInteger) line[0]).longValue() );
-                eq.setName((String) line[1]);
-                eq.setLastName((String) line[2]);
-                eq.setAge(((Integer) line[3]).byteValue());
-                list.add(eq);
+            List<User> users = session.createCriteria(User.class).list();
+            session.getTransaction().commit();
+            return users;
             }
-            return list;
+
         }
-    }
+
 
     @Override
     public void cleanUsersTable() {

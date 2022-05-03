@@ -3,6 +3,7 @@ package jm.task.core.jdbc.util;
 
 import jm.task.core.jdbc.model.User;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -23,7 +24,7 @@ public class Util {
                 settings.put(Environment.URL, "jdbc:mysql://localhost:3306/temp?autoReconnect=true&useSSL=false");
                 settings.put(Environment.USER, "root");
                 settings.put(Environment.PASS, "Gogobizare32");
-                settings.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
+                settings.put(Environment.DIALECT, "org.hibernate.dialect.MySQL5Dialect");
 
                 settings.put(Environment.SHOW_SQL, "true");
 
@@ -34,6 +35,7 @@ public class Util {
                 configuration.setProperties(settings);
 
                 configuration.addAnnotatedClass(User.class);
+                configuration.setPhysicalNamingStrategy(new CamelCaseToUnderscoresNamingStrategy());
 
                 ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
                         .applySettings(configuration.getProperties()).build();
